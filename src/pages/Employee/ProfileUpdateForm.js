@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 // @mui
 import {
-  Link, Stack, IconButton, InputAdornment, TextField, Checkbox, OutlinedInput, InputLabel, MenuItem, FormControl, ListItemText, Select, Grid
+  Link, Grid, Stack, IconButton, InputAdornment, TextField, Checkbox, OutlinedInput, InputLabel, MenuItem, FormControl, ListItemText, Select
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 
 // components
-import Iconify from '../../../components/iconify';
-import { getDepartment } from '../../../store/departmentSlice'
-import { postUser } from '../../../store/userSlice'
+import Iconify from '../../components/iconify';
+import { getDepartment } from '../../store/departmentSlice'
+import { postUser } from '../../store/userSlice'
 
 
 const ITEM_HEIGHT = 48;
@@ -24,7 +24,7 @@ const MenuProps = {
   },
 };
 
-export default function Register() {
+export default function ProfileUpdateForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const deptList = useSelector((state) => state.dept);
@@ -106,11 +106,9 @@ export default function Register() {
 
   return (
     <>
-      
-
-
+      <Grid container xs={6} md={8}>
         <Stack spacing={3}>
-          {/* {deptList.data.length} */}
+          {deptList.data.length}
           <TextField name="name" value={name} onChange={onPersonChanged} label="Full Name" required />
 
           <TextField name="email" value={email} onChange={onEmailChanged} label="Email address" required />
@@ -149,55 +147,12 @@ export default function Register() {
             </Select>
           </FormControl>
 
-          <TextField
-            name="password"
-            label="Password"
-            value={password}
-            required
-            type={showPassword ? 'text' : 'password'}
-            onChange={onPasswordChanged}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                    <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            error={errMsg}
-            helperText={errMsg ? "Password not match" : ""}
-            name="confirmpassword"
-            value={confirmPassword}
-            label="Confirm Password"
-            required
-            type={showConfirmPassword ? 'text' : 'password'}
-            onChange={onConfirmPasswordChanged}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end">
-                    <Iconify icon={showConfirmPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Stack>
-
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
-          <Checkbox name="remember" label="Remember me" />
-          <Link variant="subtitle2" underline="hover">
-            Forgot password?
-          </Link>
         </Stack>
 
         <LoadingButton disabled={!canSave} fullWidth size="large" type="submit" variant="contained" onClick={handleClick}>
           Register
         </LoadingButton>
-      
+      </Grid>
     </>
   );
 }

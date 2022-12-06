@@ -1,4 +1,4 @@
-import { Navigate, useRoutes } from 'react-router-dom';
+import { Navigate, useRoutes, Outlet } from 'react-router-dom';
 // layouts
 import DashboardLayout from './layouts/dashboard';
 import SimpleLayout from './layouts/simple';
@@ -10,25 +10,42 @@ import RegisterPage from './pages/RegisterPage';
 import Page404 from './pages/Page404';
 import DashboardAppPage from './pages/DashboardAppPage';
 import BillFormUpdate from './pages/Employee/BillFormUpdate';
+import BillStatus from './pages/Employee/BillStatus';
 import AcBillList from './pages/Accountant/AcBillList';
 import ACBillStatus from './pages/Accountant/ACBillStatus';
+import ProfileUpdateForm from './pages/Employee/ProfileUpdateForm';
 // ----------------------------------------------------------------------
 
-export default function Router() {
-  const routes = useRoutes([
-    {
-      path: '/dashboard',
-      element: <DashboardLayout />,
+export default function Router(props) {
+  const { isUserLoggedin, usertype } = props.auth
+
+  const empRouteList = [{
+    path: '/dashboard',
+    element: (isUserLoggedin) ? <DashboardLayout /> : <Navigate to="/login" />,
+    children: [
+      { element: <Navigate to="/dashboard/app" />, index: true },
+      { path: 'app', element: <DashboardAppPage /> },
+      { path: 'updatebill', element: <BillStatus /> },
+      { path: 'bill', element: <BillsList /> },
+      { path: 'newuser', element: <BillForm /> },
+      { path: 'userprofile', element: <ProfileUpdateForm /> },
+    ],
+  }]
+  const acRouteList =
+    [{
+      path: '/accountant',
+      element: isUserLoggedin ? <DashboardLayout /> : <Navigate to="/login" />,
       children: [
-        { element: <Navigate to="/dashboard/app" />, index: true },
+        { element: <Navigate to="/accountant/app" />, index: true },
         { path: 'app', element: <DashboardAppPage /> },
-        { path: 'updatebill', element: <BillFormUpdate />},
-        { path: 'bill', element: <BillsList /> },
-        { path: 'newuser', element: <BillForm /> },
-        { path: 'acbills', element: <AcBillList /> },
+        { path: 'list', element: <AcBillList /> },
         { path: 'acbillstatus', element: <ACBillStatus /> },
       ],
-    },
+    }]
+
+
+  const routes = useRoutes([
+    ...((usertype === 'accountant') ? acRouteList : empRouteList),
     {
       path: 'login',
       element: <LoginPage />,
@@ -37,12 +54,11 @@ export default function Router() {
       path: 'register',
       element: <RegisterPage />,
     },
-    
     {
       element: <SimpleLayout />,
       children: [
         { element: <Navigate to="/dashboard/app" />, index: true },
-        
+
         { path: '404', element: <Page404 /> },
         { path: '*', element: <Navigate to="/404" /> },
       ],

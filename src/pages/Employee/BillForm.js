@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 // @mui
 import {
@@ -10,7 +10,11 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
 import { LoadingButton } from '@mui/lab';
+import moment from "moment";
 import dayjs from 'dayjs';
+import { useDispatch, useSelector } from 'react-redux';
+import { getDepartment } from '../../store/departmentSlice'
+import { postBill } from '../../store/BillSlice';
 import useResponsive from '../../hooks/useResponsive';
 
 
@@ -59,65 +63,74 @@ const MenuProps = {
 
 export default function BillForm() {
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user);
+  const billStore = useSelector((state) => state.bill);
+  const deptList = useSelector((state) => state.dept);
   const mdUp = useResponsive('up', 'md');
-  const [age, setAge] = useState('');
+  const [name, setBillName] = useState('');
+  const [loaddept, setloaddept] = useState(true);
+
   const [department, setDepartment] = useState('');
   const [retail, setRetail] = useState('');
   const [amount, setAmount] = useState('');
   const [tax, setTax] = useState('');
   const [setImage, setFile] = useState('');
-
   const [datevalue, setDateValue] = useState();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [personName, setPersonName] = useState([]);
+  useEffect(() => {
+    dispatch(getDepartment())
+    setloaddept(false)
+  }, [loaddept])
 
+  const onDepartmentChanged = (e) => setDepartment(e.target.value)
+  const onBillChanged = (e) => setBillName(e.target.value)
+  const onRetailerChanged = (e) => setRetail(e.target.value)
+  const onAmountChanged = (e) => setAmount(e.target.value)
+  const onTaxChanged = (e) => setTax(e.target.value)
+  const onDateChanged = (e) => {
+    setDateValue(dayjs(e))
+  }
 
   const handleGetImageChange = (event) => {
-    console.log(event.target.files[0]);
-    setFile(URL.createObjectURL(event.target.files[0]))
-  };
-
-  const handleRetailerChange = (event) => {
-    console.log(event);
-    setRetail(event.target.value)
-  };
-
-  const handleAmountChange = (event) => {
-    setAmount(event.target.value)
-  }
-  const handleTaxChange = (event) => {
-    setTax(event.target.value)
-  }
-
-  const handleSetImageChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    console.log(value);
-    
-  };
-
-  const handleChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    console.log(value);
-    setPersonName(
-      // On autofill we get a stringified value.
-      typeof value === 'string' ? value.split(',') : value,
+    const myNewFile = new File(
+      [event.target.files[0]],
+      `${Date.now()}-${event.target.files[0].name}`,
+      { type: event.target.files[0].type }
     );
+
+    console.log(myNewFile.name)
+    setFile(myNewFile)
   };
 
-  const handleDateChange = (newValue) => {
-    console.log(newValue);
-    setDateValue(newValue)
-  };
+  const canSave =
+    [name, department, retail, amount, tax, setImage, datevalue].every(Boolean)
 
   const handleClick = () => {
-    navigate('/dashboard', { replace: true });
+    console.log("bill ", user)
+    const data = new FormData();
+    data.append('name', name)
+    data.append('deptname', department)
+    data.append('retail', retail)
+    data.append('amount', amount)
+    data.append('tax', tax)
+    data.append('setImage', setImage)
+    data.append('billstatus', "Pending")
+    data.append('billdate', moment(datevalue).format("YYYY-MM-DD"))
+    data.append('userid', user.useruuid)
+
+    dispatch(
+      postBill(data)
+    ).then(() => {
+      // if (billStore.billPostStatus) {
+        navigate('/dashboard/bill', { replace: true });
+      // }
+    })
+
+    // navigate('/dashboard', { replace: true });
   };
+
+
   return (
     <>
 
@@ -134,19 +147,23 @@ export default function BillForm() {
               <Grid item xs={12} md={6}>
                 <Item>
                   <Stack spacing={3}>
-                  <TextField name="name" label="Bill Name" />
-                  <FormControl fullWidth>
+                    <TextField name="name" value={name} onChange={onBillChanged} label="Bill Name" required />
+
+                    <FormControl fullWidth>
                       <InputLabel id="demo-simple-select-label">Department</InputLabel>
                       <Select
                         labelId="demo-simple-select-label"
                         id="demo-simple-select"
-                        value={personName}
+                        value={department}
                         label="Department"
-                        onChange={handleChange}
+                        onChange={onDepartmentChanged}
                       >
-                        <MenuItem value={10}>IT</MenuItem>
-                        <MenuItem value={20}>AP</MenuItem>
-                        <MenuItem value={30}>Insurance</MenuItem>
+                        {deptList.data.map((dept) => (
+                          <MenuItem key={dept.deptid} value={dept.name} >
+                            {dept.name}
+                          </MenuItem>
+                        ))}
+
                       </Select>
                     </FormControl>
 
@@ -157,21 +174,22 @@ export default function BillForm() {
                         id="demo-simple-select"
                         value={retail}
                         label="Retailer"
-                        onChange={handleRetailerChange}
+                        onChange={onRetailerChanged}
                       >
-                        <MenuItem value={10}>Home Depo</MenuItem>
-                        <MenuItem value={20}>Ikea</MenuItem>
-                        <MenuItem value={30}>Canada Tyre</MenuItem>
+                        <MenuItem value={'Home Depo'}>Home Depo</MenuItem>
+                        <MenuItem value={'Ikea'}>Ikea</MenuItem>
+                        <MenuItem value={'Canada Tyre'}>Canada Tyre</MenuItem>
                       </Select>
                     </FormControl>
 
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <MobileDatePicker
                         label="Date of Purchase"
-                        inputFormat="MM/DD/YYYY"
+                        inputFormat="YYYY-MM-DD"
                         value={datevalue}
-                        onChange={handleDateChange}
+                        onChange={onDateChanged}
                         renderInput={(params) => <TextField {...params} />}
+                        required
                       />
                     </LocalizationProvider>
                     <FormControl fullWidth sx={{ m: 1 }}>
@@ -179,9 +197,11 @@ export default function BillForm() {
                       <OutlinedInput
                         id="outlined-adornment-amount"
                         value={amount}
-                        onChange={handleAmountChange}
+                        onChange={onAmountChanged}
                         startAdornment={<InputAdornment position="start">$</InputAdornment>}
                         label="Amount"
+                        type="number"
+                        required
                       />
                       <FormHelperText id="component-helper-text">
                         Please enter total amount excluding tax
@@ -193,9 +213,11 @@ export default function BillForm() {
                       <OutlinedInput
                         id="outlined-adornment-amount"
                         value={tax}
-                        onChange={handleTaxChange}
+                        onChange={onTaxChanged}
                         startAdornment={<InputAdornment position="start">$</InputAdornment>}
                         label="Tax"
+                        type="number"
+                        required
                       />
                     </FormControl>
 
@@ -218,7 +240,7 @@ export default function BillForm() {
                   {setImage && <Card sx={{ maxWidth: 345, m: 2 }}>
                     <CardMedia
                       component="img"
-                      image={setImage}
+                      image={URL.createObjectURL(setImage)}
                       alt="Bill"
                     />
                   </Card>}
@@ -234,7 +256,7 @@ export default function BillForm() {
                     </Link>
                   </Stack> */}
 
-                  <LoadingButton fullWidth size="large" type="submit" variant="contained" onClick={handleClick}>
+                  <LoadingButton  disabled={!canSave} fullWidth size="large" type="submit" variant="contained" onClick={handleClick}>
                     Submit
                   </LoadingButton>
                 </Item>

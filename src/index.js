@@ -3,13 +3,13 @@ import { configureStore } from '@reduxjs/toolkit';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-import rootReducer from './store';
+import store from './store';
 
 //
 import App from './App';
 
 // ----------------------------------------------------------------------
-const store = configureStore({ reducer: rootReducer });
+// const store = configureStore({ reducer: rootReducer });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 

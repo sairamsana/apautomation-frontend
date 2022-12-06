@@ -26,6 +26,9 @@ const usersSlice = createSlice({
       state.hasErrors = true;
     },
   },
+  extraReducers:{
+    
+  }
 });
 
 // Three actions generated from the slice
@@ -41,7 +44,6 @@ export default usersSlice.reducer;
 export function fetchUsers() {
   return async (dispatch) => {
     dispatch(getUsers());
-
     try {
       const response = await HTTP.get(API.users, {
         params: {},
@@ -50,7 +52,6 @@ export function fetchUsers() {
       console.log("Resp got", response)
       //   const response = await fetch('https://www.themealdb.com/api/json/v1/1/search.php?s=');
       //   const data = await response.json();
-
       dispatch(getUsersSuccess(response));
     } catch (error) {
       dispatch(getUsersFailure());

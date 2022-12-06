@@ -1,9 +1,16 @@
-import { combineReducers } from 'redux'
+import { configureStore } from "@reduxjs/toolkit";
 
-import usersReducer from './users'
+import userSlice from './userSlice'
+import departmentSlice from "./departmentSlice";
+import billSlice from "./BillSlice";
 
-const rootReducer = combineReducers({
-  users: usersReducer,
+
+const store = configureStore({
+  reducer:{
+    user:userSlice,
+    dept:departmentSlice,
+    bill:billSlice
+  }
 })
 
-export default rootReducer
+export default store

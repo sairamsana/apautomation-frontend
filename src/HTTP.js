@@ -11,37 +11,38 @@ const HTTP = axios.create({
   ],
   headers: {
     'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin' : '*',
   },
   withCredentials: true,
 });
 
-HTTP.interceptors.response.use(
-  (response) => {
-    // check errors here and format and send
-    // perform a task before the request is sent
-    let {data} = response;
-    if (response.status !== 200) {
-      data = {
-        status: 'failed',
-        message: data && data.message ? data.message : response.statusText,
-        body: data,
-        statusCode: response.status,
-      };
-    }
-    return data;
-  },
-  (error) => {
-    let {message} = error;
-    if (error.response?.data?.message) {
-      message = error.response.data.message;
-    }
-    // handle the error
-    return {
-      status: 'failed',
-      message,
-      body: error.response && error.response.data ? error.response.data : {},
-    };
-    // return Promise.reject(error);
-  }
-);
+// HTTP.interceptors.response.use(
+//   (response) => {
+//     // check errors here and format and send
+//     // perform a task before the request is sent
+//     let {data} = response;
+//     if (response.status !== 200) {
+//       data = {
+//         status: 'failed',
+//         message: data && data.message ? data.message : response.statusText,
+//         body: data,
+//         statusCode: response.status,
+//       };
+//     }
+//     return data;
+//   },
+//   (error) => {
+//     let {message} = error;
+//     if (error.response?.data?.message) {
+//       message = error.response.data.message;
+//     }
+//     // handle the error
+//     return {
+//       status: 'failed',
+//       message,
+//       body: error.response && error.response.data ? error.response.data : {},
+//     };
+//     // return Promise.reject(error);
+//   }
+// );
 export default HTTP;

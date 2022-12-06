@@ -1,8 +1,10 @@
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { sentenceCase } from 'change-case';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+
 // @mui
 import {
   Card,
@@ -28,9 +30,11 @@ import Label from '../../components/label';
 import Iconify from '../../components/iconify';
 import Scrollbar from '../../components/scrollbar';
 // sections
+import{ updateBillID,getBillsByUserid} from '../../store/BillSlice'
 import { UserListHead, UserListToolbar } from '../../sections/@dashboard/user';
 // mock
 import USERLIST from '../../_mock/user';
+
 
 // ----------------------------------------------------------------------
 
@@ -38,7 +42,7 @@ const TABLE_HEAD = [
   { id: 'name', label: 'Name', alignRight: false },
   { id: 'Category', label: 'Category', alignRight: false },
   { id: 'Store', label: 'Store', alignRight: false },
-  { id: 'isVerified', label: 'Verified', alignRight: false },
+  { id: 'Amount', label: 'Total Amount', alignRight: false },
   { id: 'status', label: 'Status', alignRight: false },
   { id: '' },
 ];
@@ -75,8 +79,12 @@ function applySortFilter(array, comparator, query) {
 }
 
 export default function BillsList() {
-
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const userStore = useSelector((state) => state.user);
+  const billStore = useSelector((state) => state.bill);
+  const billsList = billStore.billList
 
   const [open, setOpen] = useState(null);
   const [updateBill, setUpdateBill] = useState({});
@@ -94,7 +102,7 @@ export default function BillsList() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const handleOpenMenu = (event, row) => {
-    console.log(row)
+    // console.log(row)
     setUpdateBill(row)
     setOpen(event.currentTarget);
   };
@@ -111,16 +119,20 @@ export default function BillsList() {
   };
 
   const handleMenuItemClick = (event) => {
-    console.log(event)
-    console.log(updateBill)
-    navigate(`/dashboard/updatebill?id=${updateBill.id}`, { replace: true });
-
+    // console.log(event)
+    // console.log(updateBill)
+    dispatch(updateBillID(updateBill.billid))
+    navigate(`/dashboard/updatebill?id=${updateBill.billid}`, { replace: true });
   };
+
+  useEffect(()=>{
+    dispatch(getBillsByUserid(userStore.useruuid))
+  },[])
 
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = USERLIST.map((n) => n.name);
+      const newSelecteds = billsList.map((n) => n.name);
       setSelected(newSelecteds);
       return;
     }
@@ -161,24 +173,25 @@ export default function BillsList() {
   };
 
   function statusColorPick(val) {
-    if (val === 'pending') {
+    // console.log(val)
+    if (val === 'Pending') {
       return 'info'
     }
-    if (val === 'review') {
+    if (val === 'Review') {
       return 'warning'
     }
-    if (val === 'approved') {
+    if (val === 'Approved') {
       return 'success'
     }
-    if (val === 'rejected') {
+    if (val === 'Reject') {
       return 'error'
     }
     return 'success'
   }
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - billsList.length) : 0;
 
-  const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(billsList, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
@@ -208,39 +221,48 @@ export default function BillsList() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={USERLIST.length}
+                  rowCount={billsList.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
+                    // const { id, name, role, status, company, avatarUrl, isVerified } = row;
+                    const { billid, name, deptname, retail  , amount, tax, approvals,billstatus } = row;
+                    let {status} = ''
+                    for (let i = 0; i < approvals.length; i++) {
+                      const e = approvals[i];
+                      status = e.status
+                    }
+                    const totalAmount = (tax+amount).toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: 'CAD',
+                    })
                     const selectedUser = selected.indexOf(name) !== -1;
-
                     return (
-                      <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                        <TableCell padding="checkbox">
+                      <TableRow hover key={billid} tabIndex={-1}  selected={selectedUser}>
+                        {/* <TableCell padding="checkbox">
                           <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
-                        </TableCell>
+                        </TableCell> */}
 
-                        <TableCell component="th" scope="row" padding="none">
+                        <TableCell component="th" scope="row" >
                           <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={avatarUrl} />
+                            {/* <Avatar alt={name} src={avatarUrl} /> */}
                             <Typography variant="subtitle2" noWrap>
                               {name}
                             </Typography>
                           </Stack>
                         </TableCell>
 
-                        <TableCell align="left">{company}</TableCell>
+                        <TableCell align="left">{deptname}</TableCell>
 
-                        <TableCell align="left">{role}</TableCell>
+                        <TableCell align="left">{retail}</TableCell>
 
-                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
+                        <TableCell align="left">{totalAmount}</TableCell>
 
                         <TableCell align="left">
-                          <Label color={statusColorPick(status)}>{sentenceCase(status)}</Label>
+                          <Label color={statusColorPick(billstatus)}>{sentenceCase(billstatus)}</Label>
                         </TableCell>
 
                         <TableCell align="right">
@@ -287,7 +309,7 @@ export default function BillsList() {
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={USERLIST.length}
+            count={billsList.length}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={handleChangePage}
@@ -316,13 +338,13 @@ export default function BillsList() {
       >
         <MenuItem onClick={(event) => handleMenuItemClick(event)}>
           <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
-          Edit
+          View
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        {/* <MenuItem sx={{ color: 'error.main' }}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           Delete
-        </MenuItem>
+        </MenuItem> */}
       </Popover>
     </>
   );

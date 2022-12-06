@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+
 // @mui
 import { styled, alpha } from '@mui/material/styles';
 import { Box, Link, Button, Drawer, Typography, Avatar, Stack } from '@mui/material';
@@ -13,7 +15,7 @@ import Logo from '../../../components/logo';
 import Scrollbar from '../../../components/scrollbar';
 import NavSection from '../../../components/nav-section';
 //
-import navConfig from './config';
+import {navConfig,navConfigAccountant} from './config';
 
 // ----------------------------------------------------------------------
 
@@ -36,7 +38,8 @@ Nav.propTypes = {
 
 export default function Nav({ openNav, onCloseNav }) {
   const { pathname } = useLocation();
-
+  const user = useSelector((state) => state.user);
+  const {usertype,name } = user
   const isDesktop = useResponsive('up', 'lg');
 
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function Nav({ openNav, onCloseNav }) {
 
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
-                {account.displayName}
+              {user.userLoginData.name}
               </Typography>
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -75,7 +78,8 @@ export default function Nav({ openNav, onCloseNav }) {
         </Link>
       </Box>
 
-      <NavSection data={navConfig} />
+      {usertype === 'accountant' ?<NavSection data={navConfig} />:<NavSection data={navConfigAccountant} />}
+      
 
       <Box sx={{ flexGrow: 1 }} />
 
